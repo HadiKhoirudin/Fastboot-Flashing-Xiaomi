@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32802.440
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "FastBootFlashingXiaomi", "FastBootFlashingXiaomi\FastBootFlashingXiaomi.vbproj", "{83ED0227-6EE8-4F35-9D38-7118D8F74CB9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0411D567-5CAD-43B5-9B60-BA3206CC4A43}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{83ED0227-6EE8-4F35-9D38-7118D8F74CB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83ED0227-6EE8-4F35-9D38-7118D8F74CB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83ED0227-6EE8-4F35-9D38-7118D8F74CB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83ED0227-6EE8-4F35-9D38-7118D8F74CB9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D271445B-18AE-4B24-A2A7-A4185FAE6588}
+	EndGlobalSection
+EndGlobal
