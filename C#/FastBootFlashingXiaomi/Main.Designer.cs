@@ -37,6 +37,11 @@ namespace FastBootFlashingXiaomi
         {
             DataView = new DataGridView();
             DataView.CellDoubleClick += new DataGridViewCellEventHandler(DataView_CellDoubleClick);
+            Column1 = new DataGridViewCheckBoxColumn();
+            Column2 = new DataGridViewComboBoxColumn();
+            Column3 = new DataGridViewTextBoxColumn();
+            Column4 = new DataGridViewTextBoxColumn();
+            Column5 = new DataGridViewTextBoxColumn();
             RichTextBox = new RichTextBox();
             RichTextBox.TextChanged += new EventHandler(RichTextBox_TextChanged);
             TextBoxLocation = new TextBox();
@@ -60,11 +65,7 @@ namespace FastBootFlashingXiaomi
             CheckBox.CheckedChanged += new EventHandler(CheckBox_CheckedChanged);
             ButtonRebootSYS = new Button();
             ButtonRebootSYS.Click += new EventHandler(ButtonRebootSYS_Click);
-            Column1 = new DataGridViewCheckBoxColumn();
-            Column2 = new DataGridViewComboBoxColumn();
-            Column3 = new DataGridViewTextBoxColumn();
-            Column4 = new DataGridViewTextBoxColumn();
-            Column5 = new DataGridViewTextBoxColumn();
+            ProgressBar2 = new ProgressBar();
             ((System.ComponentModel.ISupportInitialize)DataView).BeginInit();
             SuspendLayout();
             // 
@@ -80,6 +81,36 @@ namespace FastBootFlashingXiaomi
             DataView.RowHeadersVisible = false;
             DataView.Size = new Size(432, 288);
             DataView.TabIndex = 0;
+            // 
+            // Column1
+            // 
+            Column1.HeaderText = "";
+            Column1.Name = "Column1";
+            Column1.Width = 20;
+            // 
+            // Column2
+            // 
+            Column2.HeaderText = "Command";
+            Column2.Items.AddRange(new object[] { "boot", "erase", "flash", "oem", "reboot", "reboot-edl" });
+            Column2.Name = "Column2";
+            Column2.Resizable = DataGridViewTriState.True;
+            Column2.SortMode = DataGridViewColumnSortMode.Automatic;
+            // 
+            // Column3
+            // 
+            Column3.HeaderText = "Partition";
+            Column3.Name = "Column3";
+            // 
+            // Column4
+            // 
+            Column4.HeaderText = "Filename                  Double Click [...]";
+            Column4.Name = "Column4";
+            Column4.Width = 208;
+            // 
+            // Column5
+            // 
+            Column5.HeaderText = "Path";
+            Column5.Name = "Column5";
             // 
             // RichTextBox
             // 
@@ -128,8 +159,9 @@ namespace FastBootFlashingXiaomi
             // ProgressBar1
             // 
             ProgressBar1.Location = new Point(12, 342);
+            ProgressBar1.Margin = new Padding(3, 0, 3, 0);
             ProgressBar1.Name = "ProgressBar1";
-            ProgressBar1.Size = new Size(776, 18);
+            ProgressBar1.Size = new Size(776, 10);
             ProgressBar1.TabIndex = 6;
             // 
             // Label2
@@ -189,7 +221,7 @@ namespace FastBootFlashingXiaomi
             // 
             LabelTimer.AutoSize = true;
             LabelTimer.BackColor = SystemColors.Window;
-            LabelTimer.Location = new Point(766, 14);
+            LabelTimer.Location = new Point(766, 13);
             LabelTimer.Name = "LabelTimer";
             LabelTimer.Size = new Size(19, 13);
             LabelTimer.TabIndex = 14;
@@ -213,42 +245,20 @@ namespace FastBootFlashingXiaomi
             ButtonRebootSYS.Text = "Reboot SYS";
             ButtonRebootSYS.UseVisualStyleBackColor = true;
             // 
-            // Column1
+            // ProgressBar2
             // 
-            Column1.HeaderText = "";
-            Column1.Name = "Column1";
-            Column1.Width = 20;
-            // 
-            // Column2
-            // 
-            Column2.HeaderText = "Command";
-            Column2.Items.AddRange(new object[] { "boot", "erase", "flash", "oem", "reboot", "reboot-edl" });
-            Column2.Name = "Column2";
-            Column2.Resizable = DataGridViewTriState.True;
-            Column2.SortMode = DataGridViewColumnSortMode.Automatic;
-            // 
-            // Column3
-            // 
-            Column3.HeaderText = "Partition";
-            Column3.Name = "Column3";
-            // 
-            // Column4
-            // 
-            Column4.HeaderText = "Filename                  Double Click [...]";
-            Column4.Name = "Column4";
-            Column4.Width = 208;
-            // 
-            // Column5
-            // 
-            Column5.HeaderText = "Path";
-            Column5.Name = "Column5";
-            Column5.Visible = false;
+            ProgressBar2.Location = new Point(12, 352);
+            ProgressBar2.Margin = new Padding(3, 0, 3, 0);
+            ProgressBar2.Name = "ProgressBar2";
+            ProgressBar2.Size = new Size(776, 10);
+            ProgressBar2.TabIndex = 17;
             // 
             // Main
             // 
             AutoScaleDimensions = new SizeF(6.0f, 13.0f);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(795, 371);
+            Controls.Add(ProgressBar2);
             Controls.Add(ButtonRebootSYS);
             Controls.Add(CheckBox);
             Controls.Add(LabelTimer);
@@ -268,7 +278,7 @@ namespace FastBootFlashingXiaomi
             MaximizeBox = false;
             Name = "Main";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Fastboot Flashing Xiaomi";
+            Text = "Fastboot Flashing Xiaomi C#";
             ((System.ComponentModel.ISupportInitialize)DataView).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -291,6 +301,7 @@ namespace FastBootFlashingXiaomi
         internal Label LabelTimer;
         internal CheckBox CheckBox;
         internal Button ButtonRebootSYS;
+        internal ProgressBar ProgressBar2;
         internal DataGridViewCheckBoxColumn Column1;
         internal DataGridViewComboBoxColumn Column2;
         internal DataGridViewTextBoxColumn Column3;

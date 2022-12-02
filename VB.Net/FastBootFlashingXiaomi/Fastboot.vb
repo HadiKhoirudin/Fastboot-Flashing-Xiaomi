@@ -57,10 +57,7 @@ Public Class Fastboot
         End Select
     End Function
 
-
     Public Function Wait()
-        Dim counter As Integer = 30
-
         While True
             Dim allDevices = UsbDevice.AllDevices
 
@@ -68,17 +65,16 @@ Public Class Fastboot
                 Return True
             End If
 
-            If counter = 1 Then
+            If Main.SharedUI.counter = 0 Then
                 Return False
             End If
 
             Main.SharedUI.Delay(1)
-            counter -= 1
-            Main.SharedUI.LabelTimer.Invoke(CType(Sub() Main.SharedUI.LabelTimer.Text = counter - 1, Action))
+            Main.SharedUI.counter -= 1
+            Main.SharedUI.LabelTimer.Invoke(CType(Sub() Main.SharedUI.LabelTimer.Text = Main.SharedUI.counter, Action))
         End While
         Return False
     End Function
-
 
     Public Sub Connect()
         Dim finder As UsbDeviceFinder
@@ -91,12 +87,10 @@ Public Class Fastboot
 
         device = UsbDevice.OpenUsbDevice(finder)
 
-        If device Is Nothing Then
-
+        Do While device Is Nothing
             Main.SharedUI.Delay(3)
-            Connect()
-
-        End If
+            device = UsbDevice.OpenUsbDevice(finder)
+        Loop
 
         Dim wDev = TryCast(device, IUsbDevice)
 
@@ -159,8 +153,8 @@ Public Class Fastboot
         Dim str = response.ToString().Replace(CStr(Microsoft.VisualBasic.Constants.vbCr), CStr(String.Empty)).Replace(Microsoft.VisualBasic.Constants.vbNullChar, String.Empty)
 
         Return New Response(status, str) With {
-        .RawData = Encoding.ASCII.GetBytes(strBuffer)
-    }
+                    .RawData = Encoding.ASCII.GetBytes(strBuffer)
+                }
     End Function
 
 
@@ -186,12 +180,28 @@ Public Class Fastboot
         Dim writeEndpoint = device.OpenEndpointWriter(WriteEndpointID.Ep01)
         Dim readEndpoint = device.OpenEndpointReader(ReadEndpointID.Ep01)
 
+        Dim totallength = stream.Length
         Dim length = stream.Length
         Dim buffer = New Byte(524287) {}
 
         SendDataCommand(length)
 
+        Dim Progress As New ProgressBar()
+        Progress.Minimum = 0
+        Progress.Maximum = 100
+        Dim resultprogress As Integer
+        Dim fileOffset As Long = 0
+        Dim totalprogress As Long = 0
+
         While length >= BLOCK_SIZE
+            fileOffset += stream.Length
+            totalprogress += length
+            resultprogress = CInt(Math.Round((fileOffset / 100))) - CInt(Math.Round((totalprogress / 100)))
+
+            If resultprogress < totallength Then
+                Main.SharedUI.ProcessBar1(resultprogress, totallength)
+            End If
+
             TransferBlock(stream, writeEndpoint, buffer, BLOCK_SIZE)
             length -= BLOCK_SIZE
         End While
@@ -217,6 +227,8 @@ Public Class Fastboot
 
         If status <> Status.Okay Then
             Throw New Exception($"Invalid status: {strBuffer}")
+        Else
+            Main.SharedUI.ProcessBar1(100, 100)
         End If
     End Sub
 

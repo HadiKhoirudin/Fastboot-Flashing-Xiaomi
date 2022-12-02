@@ -8,6 +8,9 @@ dotnet_diagnostic.BC42030.severity = none
 # CS1591: Missing XML comment for publicly visible type or member
 dotnet_diagnostic.CS1591.severity = none
 
+# CS1690: Accessing a member on a field of a marshal-by-reference class may cause a runtime exception
+dotnet_diagnostic.CS1690.severity = none
+
 # CS0162: Unreachable code detected
 dotnet_diagnostic.CS0162.severity = none
 

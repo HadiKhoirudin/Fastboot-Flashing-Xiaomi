@@ -34,9 +34,11 @@ namespace FastBootFlashingXiaomi
         internal static Main SharedUI;
         public string WorkerTodo;
         public bool IsConnected;
+        public string TodoCommand;
         public string totalchecked;
         public string totaldo;
-        public string TodoCommand;
+        public long totallength = 0L;
+        public int counter = 30;
         #region UI
         public Main()
         {
@@ -96,18 +98,28 @@ namespace FastBootFlashingXiaomi
         {
             ProgressBar1.Invoke(new Action(() => ProgressBar1.Value = (int)Math.Round(Math.Round(Process * 100L / (double)total))));
         }
+        public void ProcessBar2(long Process, long total)
+        {
+            ProgressBar2.Invoke(new Action(() => ProgressBar2.Value = (int)Math.Round(Math.Round(Process * 100L / (double)total))));
+        }
+
         #endregion
 
 
         #region Function
         public bool FastbootConnect()
         {
+            counter = 30;
             RichLogs("Waiting devices to connect... ", Color.White, false, false);
+            ComboBoxDevices.Invoke(new Action(() => ComboBoxDevices.Text = ""));
+            LabelProductName.Invoke(new Action(() => LabelProductName.Text = "-"));
             bool status = Conversions.ToBoolean(Fastboot.Wait());
             if (status)
             {
                 Fastboot.Connect();
-                ComboBoxDevices.Invoke(new Action(() => ComboBoxDevices.Text = Fastboot.GetSerialNumber()));
+                IsConnected = true;
+                ComboBoxDevices.Invoke(new Action(() => ComboBoxDevices.Text = "Fastboot Device - " + Fastboot.GetSerialNumber()));
+                LabelProductName.Invoke(new Action(() => LabelProductName.Text = Fastboot.Command("getvar:product").Payload));
                 return true;
             }
             else
@@ -160,7 +172,7 @@ namespace FastBootFlashingXiaomi
                         if (openFileDialog.ShowDialog() == DialogResult.OK)
                         {
                             DataView.CurrentRow.Cells[3].Value = openFileDialog.SafeFileName;
-                            DataView.CurrentRow.Cells[4].Value = openFileDialog.FileName;
+                            DataView.CurrentRow.Cells[4].Value = Path.Combine(new string[] { Path.GetDirectoryName(openFileDialog.FileName) });
                         }
                     }
                     else
@@ -207,7 +219,7 @@ namespace FastBootFlashingXiaomi
                     num = num + 1;
                 }
 
-                product = strs[0].Replace(" ", "");
+                product = strs[0];
 
                 LabelProductName.Text = product;
                 if (str.Contains(")"))
@@ -290,6 +302,7 @@ namespace FastBootFlashingXiaomi
         {
             if (FastbootWorker.IsBusy)
             {
+                counter = 1;
                 FastbootWorker.CancelAsync();
             }
         }
@@ -314,9 +327,11 @@ namespace FastBootFlashingXiaomi
 
                     TodoCommand = "";
                     totalchecked = 0.ToString();
-                    string commands;
-                    string args;
-                    string filename;
+                    string commands = "";
+                    string args = "";
+                    string name = "";
+                    string path = "";
+                    string filename = "";
                     foreach (DataGridViewRow item in DataView.Rows)
                     {
                         if (Conversions.ToBoolean(Operators.ConditionalCompareObjectEqual(item.Cells[DataView.Columns[0].Index].Value, true, false)))
@@ -326,7 +341,17 @@ namespace FastBootFlashingXiaomi
 
                             commands = Conversions.ToString(item.Cells[DataView.Columns[1].Index].Value);
                             args = Conversions.ToString(item.Cells[DataView.Columns[2].Index].Value);
-                            filename = Conversions.ToString(Operators.ConcatenateObject(Operators.ConcatenateObject(item.Cells[DataView.Columns[4].Index].Value, @"\"), item.Cells[DataView.Columns[3].Index].Value));
+                            name = Conversions.ToString(item.Cells[DataView.Columns[3].Index].Value);
+                            path = Conversions.ToString(Operators.ConcatenateObject(item.Cells[DataView.Columns[4].Index].Value, @"\"));
+
+                            if (!string.IsNullOrEmpty(name))
+                            {
+                                filename = path + name;
+                            }
+                            else
+                            {
+                                filename = "";
+                            }
 
                             if (string.IsNullOrEmpty(args))
                             {
@@ -430,7 +455,6 @@ namespace FastBootFlashingXiaomi
             {
                 RichLogs("Device Connected! ", Color.Lime, false, true);
                 Delay(0.5d);
-
                 if (WorkerTodo == "flash")
                 {
                     string product = Fastboot.Command("getvar:product").Payload;
@@ -442,15 +466,19 @@ namespace FastBootFlashingXiaomi
                             while (stringReader.Peek() != -1)
                             {
                                 string str1 = stringReader.ReadLine();
-                                string command = "";
-                                string partition = "";
-                                string oem = "";
-                                string filename = "";
+                                string command;
+                                string partition;
+                                string oem;
+                                string filename;
 
                                 if (!string.IsNullOrEmpty(str1))
                                 {
 
                                     Console.WriteLine(str1);
+
+                                    totaldo = (totaldo + 1d).ToString();
+
+                                    Delay(0.5d);
 
                                     var strArrays = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
@@ -511,14 +539,12 @@ namespace FastBootFlashingXiaomi
                                         else if (command == "erase")
                                         {
                                             partition = strArrays[1];
-                                            if (File.Exists(filename))
-                                            {
-                                                RichLogs(Fastboot.Command(command + ":" + partition).Status.ToString(), Color.Lime, false, true);
-                                            }
+                                            RichLogs(Fastboot.Command(command + ":" + partition).Status.ToString(), Color.Lime, false, true);
                                         }
                                         else if (command == "boot")
                                         {
                                             filename = strArrays[2];
+                                            RichLogs(command + " ", Color.White, false, false);
                                             if (File.Exists(filename))
                                             {
                                                 Fastboot.UploadData(new FileStream(filename, FileMode.Open));
@@ -531,14 +557,12 @@ namespace FastBootFlashingXiaomi
                                         }
 
                                     }
-
-                                    totaldo = (totaldo + 1d).ToString();
-                                    ProcessBar1(Conversions.ToLong(totaldo), Conversions.ToLong(totalchecked));
                                 }
                                 if (FastbootWorker.CancellationPending)
                                 {
-                                    e.Cancel = true;
+                                    break;
                                 }
+                                ProcessBar2(Conversions.ToLong(totaldo), Conversions.ToLong(totalchecked));
                             }
                         }
                     }
@@ -568,11 +592,6 @@ namespace FastBootFlashingXiaomi
                     RichLogs(Fastboot.Command("reboot-edl").Status.ToString(), Color.Lime, false, true);
 
                 }
-
-            }
-            if (FastbootWorker.CancellationPending)
-            {
-                e.Cancel = true;
             }
         }
 

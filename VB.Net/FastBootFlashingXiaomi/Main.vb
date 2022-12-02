@@ -8,9 +8,11 @@ Public Class Main
     Friend Shared SharedUI As Main
     Public WorkerTodo As String
     Public IsConnected As Boolean
+    Public TodoCommand As String
     Public totalchecked As String
     Public totaldo As String
-    Public TodoCommand As String
+    Public totallength As Long = 0
+    Public counter As Integer = 30
 #Region "UI"
     Public Sub New()
         AddHandler Load, AddressOf Main_Load
@@ -59,16 +61,27 @@ Public Class Main
                                            ProgressBar1.Value = CInt(Math.Round((Process * 100L) / total))
                                        End Sub))
     End Sub
+    Public Sub ProcessBar2(Process As Long, total As Long)
+        ProgressBar2.Invoke(New Action(Sub()
+                                           ProgressBar2.Value = CInt(Math.Round((Process * 100L) / total))
+                                       End Sub))
+    End Sub
+
 #End Region
 
 
 #Region "Function"
     Public Function FastbootConnect() As Boolean
+        counter = 30
         RichLogs("Waiting devices to connect... ", Color.White, False, False)
+        ComboBoxDevices.Invoke(CType(Sub() ComboBoxDevices.Text = "", Action))
+        LabelProductName.Invoke(CType(Sub() LabelProductName.Text = "-", Action))
         Dim status As Boolean = Fastboot.Wait()
         If status Then
             Fastboot.Connect()
-            ComboBoxDevices.Invoke(CType(Sub() ComboBoxDevices.Text = Fastboot.GetSerialNumber(), Action))
+            IsConnected = True
+            ComboBoxDevices.Invoke(CType(Sub() ComboBoxDevices.Text = "Fastboot Device - " & Fastboot.GetSerialNumber(), Action))
+            LabelProductName.Invoke(CType(Sub() LabelProductName.Text = Fastboot.Command("getvar:product").Payload, Action))
             Return True
         Else
             ComboBoxDevices.Invoke(CType(Sub() ComboBoxDevices.Text = "", Action))
@@ -111,7 +124,7 @@ Public Class Main
                     openFileDialog.RestoreDirectory = True
                     If openFileDialog.ShowDialog() = DialogResult.OK Then
                         DataView.CurrentRow.Cells(3).Value = openFileDialog.SafeFileName
-                        DataView.CurrentRow.Cells(4).Value = openFileDialog.FileName
+                        DataView.CurrentRow.Cells(4).Value = Path.Combine(New String() {Path.GetDirectoryName(openFileDialog.FileName)})
                     End If
                 Else
                     MsgBox("Custom file for flash and boot command!")
@@ -153,7 +166,7 @@ Public Class Main
                 num = num + 1
             End While
 
-            product = strs(0).Replace(" ", "")
+            product = strs(0)
 
             LabelProductName.Text = product
             If str.Contains(")") Then
@@ -223,6 +236,7 @@ Public Class Main
     End Sub
     Private Sub ButtonSTOP_Click(sender As Object, e As EventArgs) Handles ButtonSTOP.Click
         If FastbootWorker.IsBusy Then
+            counter = 1
             FastbootWorker.CancelAsync()
         End If
     End Sub
@@ -242,9 +256,11 @@ Public Class Main
 
                 TodoCommand = ""
                 totalchecked = 0
-                Dim commands As String
-                Dim args As String
-                Dim filename As String
+                Dim commands As String = ""
+                Dim args As String = ""
+                Dim name As String = ""
+                Dim path As String = ""
+                Dim filename As String = ""
                 For Each item As DataGridViewRow In DataView.Rows
                     If item.Cells(DataView.Columns(0).Index).Value = True Then
 
@@ -252,7 +268,14 @@ Public Class Main
 
                         commands = item.Cells(DataView.Columns(1).Index).Value
                         args = item.Cells(DataView.Columns(2).Index).Value
-                        filename = item.Cells(DataView.Columns(4).Index).Value & "\" & item.Cells(DataView.Columns(3).Index).Value
+                        name = item.Cells(DataView.Columns(3).Index).Value
+                        path = item.Cells(DataView.Columns(4).Index).Value & "\"
+
+                        If name <> String.Empty Then
+                            filename = path & name
+                        Else
+                            filename = ""
+                        End If
 
                         If args = "" Then
 
@@ -335,7 +358,6 @@ Public Class Main
         If Connect Then
             RichLogs("Device Connected! ", Color.Lime, False, True)
             Delay(0.5)
-
             If WorkerTodo = "flash" Then
                 Dim product = Fastboot.Command("getvar:product").Payload
                 If product.Contains(LabelProductName.Text) Then
@@ -343,78 +365,79 @@ Public Class Main
                     Using stringReader As StringReader = New StringReader(TodoCommand)
                         While stringReader.Peek() <> -1
                             Dim str1 As String = stringReader.ReadLine()
-                                Dim command As String = ""
-                                Dim partition As String = ""
-                                Dim oem As String = ""
-                                Dim filename As String = ""
+                            Dim command As String
+                            Dim partition As String
+                            Dim oem As String
+                            Dim filename As String
 
-                                If str1 <> String.Empty Then
+                            If str1 <> String.Empty Then
 
-                                    Console.WriteLine(str1)
+                                Console.WriteLine(str1)
 
-                                    Dim strArrays As String() = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+                                totaldo += 1
 
-                                    If strArrays.Length = 1 Then
-                                        command = strArrays(0)
-                                        RichLogs(command & " ", Color.White, False, False)
-                                        RichLogs(Fastboot.Command(command).Status.ToString, Color.Lime, False, True)
-                                    End If
+                                Delay(0.5)
 
-                                    If strArrays.Length = 2 Then
-                                        command = strArrays(0)
-                                        If command = "erase" Then
-                                            partition = strArrays(1)
-                                            RichLogs(command & " " & partition & " ", Color.White, False, False)
-                                            RichLogs(Fastboot.Command(command & ":" & partition).Status.ToString, Color.Lime, False, True)
-                                        ElseIf command = "boot" Then
-                                            filename = strArrays(1)
-                                            If File.Exists(filename) Then
-                                                Fastboot.UploadData(New FileStream(filename, FileMode.Open))
-                                                RichLogs(Fastboot.Command(command).Status.ToString, Color.Lime, False, True)
-                                            Else
-                                                RichLogs("File Doesn't Exist", Color.Yellow, False, True)
-                                            End If
-                                        ElseIf command = "oem" Then
-                                            oem = strArrays(1)
-                                            RichLogs(Fastboot.Command(command & " " & oem).Status.ToString, Color.Lime, False, True)
-                                        End If
-                                    End If
+                                Dim strArrays As String() = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
 
-                                    If strArrays.Length = 3 Then
-                                        command = strArrays(0)
-                                        If command = "flash" Then
-                                            partition = strArrays(1)
-                                            filename = strArrays(2)
-                                            If File.Exists(filename) Then
-                                                RichLogs(command & " " & partition & " ", Color.White, False, False)
-                                                Fastboot.UploadData(New FileStream(filename, FileMode.Open))
-                                                RichLogs(Fastboot.Command(command & ":" & partition).Status.ToString, Color.Lime, False, True)
-                                            Else
-                                                RichLogs("File Doesn't Exist", Color.Yellow, False, True)
-                                            End If
-                                        ElseIf command = "erase" Then
-                                            partition = strArrays(1)
-                                            If File.Exists(filename) Then
-                                                RichLogs(Fastboot.Command(command & ":" & partition).Status.ToString, Color.Lime, False, True)
-                                            End If
-                                        ElseIf command = "boot" Then
-                                            filename = strArrays(2)
-                                            If File.Exists(filename) Then
-                                                Fastboot.UploadData(New FileStream(filename, FileMode.Open))
-                                                RichLogs(Fastboot.Command(command).Status.ToString, Color.Lime, False, True)
-                                            Else
-                                                RichLogs("File Doesn't Exist", Color.Yellow, False, True)
-                                            End If
-                                        End If
-
-                                    End If
-
-                                    totaldo += 1
-                                    ProcessBar1(totaldo, totalchecked)
+                                If strArrays.Length = 1 Then
+                                    command = strArrays(0)
+                                    RichLogs(command & " ", Color.White, False, False)
+                                    RichLogs(Fastboot.Command(command).Status.ToString, Color.Lime, False, True)
                                 End If
-                            If FastbootWorker.CancellationPending Then
-                                e.Cancel = True
+
+                                If strArrays.Length = 2 Then
+                                    command = strArrays(0)
+                                    If command = "erase" Then
+                                        partition = strArrays(1)
+                                        RichLogs(command & " " & partition & " ", Color.White, False, False)
+                                        RichLogs(Fastboot.Command(command & ":" & partition).Status.ToString, Color.Lime, False, True)
+                                    ElseIf command = "boot" Then
+                                        filename = strArrays(1)
+                                        If File.Exists(filename) Then
+                                            Fastboot.UploadData(New FileStream(filename, FileMode.Open))
+                                            RichLogs(Fastboot.Command(command).Status.ToString, Color.Lime, False, True)
+                                        Else
+                                            RichLogs("File Doesn't Exist", Color.Yellow, False, True)
+                                        End If
+                                    ElseIf command = "oem" Then
+                                        oem = strArrays(1)
+                                        RichLogs(Fastboot.Command(command & " " & oem).Status.ToString, Color.Lime, False, True)
+                                    End If
+                                End If
+
+                                If strArrays.Length = 3 Then
+                                    command = strArrays(0)
+                                    If command = "flash" Then
+                                        partition = strArrays(1)
+                                        filename = strArrays(2)
+                                        If File.Exists(filename) Then
+                                            RichLogs(command & " " & partition & " ", Color.White, False, False)
+                                            Fastboot.UploadData(New FileStream(filename, FileMode.Open))
+                                            RichLogs(Fastboot.Command(command & ":" & partition).Status.ToString, Color.Lime, False, True)
+                                        Else
+                                            RichLogs("File Doesn't Exist", Color.Yellow, False, True)
+                                        End If
+                                    ElseIf command = "erase" Then
+                                        partition = strArrays(1)
+                                        RichLogs(Fastboot.Command(command & ":" & partition).Status.ToString, Color.Lime, False, True)
+                                    ElseIf command = "boot" Then
+                                        filename = strArrays(2)
+                                        RichLogs(command & " ", Color.White, False, False)
+                                        If File.Exists(filename) Then
+                                            Fastboot.UploadData(New FileStream(filename, FileMode.Open))
+                                            RichLogs(Fastboot.Command(command).Status.ToString, Color.Lime, False, True)
+                                        Else
+                                            RichLogs("File Doesn't Exist", Color.Yellow, False, True)
+                                        End If
+                                    End If
+
+                                End If
                             End If
+                            If FastbootWorker.CancellationPending Then
+                                Exit While
+                            End If
+                            ProcessBar2(totaldo, totalchecked)
                         End While
                     End Using
 
@@ -436,10 +459,6 @@ Public Class Main
                 RichLogs(Fastboot.Command("reboot-edl").Status.ToString, Color.Lime, False, True)
 
             End If
-
-        End If
-        If FastbootWorker.CancellationPending Then
-            e.Cancel = True
         End If
     End Sub
 

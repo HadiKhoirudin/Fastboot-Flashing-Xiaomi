@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using LibUsbDotNet;
 using LibUsbDotNet.Main;
 using Microsoft.VisualBasic;
@@ -82,11 +83,8 @@ namespace FastBootFlashingXiaomi
             }
         }
 
-
         public object Wait()
         {
-            int counter = 30;
-
             while (true)
             {
                 var allDevices = UsbDevice.AllDevices;
@@ -96,18 +94,17 @@ namespace FastBootFlashingXiaomi
                     return true;
                 }
 
-                if (counter == 1)
+                if (Main.SharedUI.counter == 0)
                 {
                     return false;
                 }
 
                 Main.SharedUI.Delay(1d);
-                counter -= 1;
-                Main.SharedUI.LabelTimer.Invoke(new Action(() => Main.SharedUI.LabelTimer.Text = (counter - 1).ToString()));
+                Main.SharedUI.counter -= 1;
+                Main.SharedUI.LabelTimer.Invoke(new Action(() => Main.SharedUI.LabelTimer.Text = Main.SharedUI.counter.ToString()));
             }
             return false;
         }
-
 
         public void Connect()
         {
@@ -124,12 +121,10 @@ namespace FastBootFlashingXiaomi
 
             device = UsbDevice.OpenUsbDevice(finder);
 
-            if (device is null)
+            while (device is null)
             {
-
                 Main.SharedUI.Delay(3d);
-                Connect();
-
+                device = UsbDevice.OpenUsbDevice(finder);
             }
 
             IUsbDevice wDev = device as IUsbDevice;
@@ -233,13 +228,30 @@ namespace FastBootFlashingXiaomi
             var writeEndpoint = device.OpenEndpointWriter(WriteEndpointID.Ep01);
             var readEndpoint = device.OpenEndpointReader(ReadEndpointID.Ep01);
 
+            long totallength = stream.Length;
             long length = stream.Length;
             var buffer = new byte[524288];
 
             SendDataCommand(length);
 
+            var Progress = new ProgressBar();
+            Progress.Minimum = 0;
+            Progress.Maximum = 100;
+            int resultprogress;
+            long fileOffset = 0L;
+            long totalprogress = 0L;
+
             while (length >= BLOCK_SIZE)
             {
+                fileOffset += stream.Length;
+                totalprogress += length;
+                resultprogress = (int)Math.Round(Math.Round(fileOffset / 100d)) - (int)Math.Round(Math.Round(totalprogress / 100d));
+
+                if (resultprogress < totallength)
+                {
+                    Main.SharedUI.ProcessBar1(resultprogress, totallength);
+                }
+
                 TransferBlock(stream, writeEndpoint, buffer, BLOCK_SIZE);
                 length -= BLOCK_SIZE;
             }
@@ -269,6 +281,10 @@ namespace FastBootFlashingXiaomi
             if (status != Status.Okay)
             {
                 throw new Exception($"Invalid status: {strBuffer}");
+            }
+            else
+            {
+                Main.SharedUI.ProcessBar1(100L, 100L);
             }
         }
 

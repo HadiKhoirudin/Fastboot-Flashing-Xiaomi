@@ -38,6 +38,7 @@ Partial Class Main
         Me.LabelTimer = New System.Windows.Forms.Label()
         Me.CheckBox = New System.Windows.Forms.CheckBox()
         Me.ButtonRebootSYS = New System.Windows.Forms.Button()
+        Me.ProgressBar2 = New System.Windows.Forms.ProgressBar()
         Me.Column1 = New System.Windows.Forms.DataGridViewCheckBoxColumn()
         Me.Column2 = New System.Windows.Forms.DataGridViewComboBoxColumn()
         Me.Column3 = New System.Windows.Forms.DataGridViewTextBoxColumn()
@@ -106,8 +107,9 @@ Partial Class Main
         'ProgressBar1
         '
         Me.ProgressBar1.Location = New System.Drawing.Point(12, 342)
+        Me.ProgressBar1.Margin = New System.Windows.Forms.Padding(3, 0, 3, 0)
         Me.ProgressBar1.Name = "ProgressBar1"
-        Me.ProgressBar1.Size = New System.Drawing.Size(776, 18)
+        Me.ProgressBar1.Size = New System.Drawing.Size(776, 10)
         Me.ProgressBar1.TabIndex = 6
         '
         'Label2
@@ -167,7 +169,7 @@ Partial Class Main
         '
         Me.LabelTimer.AutoSize = True
         Me.LabelTimer.BackColor = System.Drawing.SystemColors.Window
-        Me.LabelTimer.Location = New System.Drawing.Point(766, 14)
+        Me.LabelTimer.Location = New System.Drawing.Point(766, 13)
         Me.LabelTimer.Name = "LabelTimer"
         Me.LabelTimer.Size = New System.Drawing.Size(19, 13)
         Me.LabelTimer.TabIndex = 14
@@ -190,6 +192,14 @@ Partial Class Main
         Me.ButtonRebootSYS.TabIndex = 16
         Me.ButtonRebootSYS.Text = "Reboot SYS"
         Me.ButtonRebootSYS.UseVisualStyleBackColor = True
+        '
+        'ProgressBar2
+        '
+        Me.ProgressBar2.Location = New System.Drawing.Point(12, 352)
+        Me.ProgressBar2.Margin = New System.Windows.Forms.Padding(3, 0, 3, 0)
+        Me.ProgressBar2.Name = "ProgressBar2"
+        Me.ProgressBar2.Size = New System.Drawing.Size(776, 10)
+        Me.ProgressBar2.TabIndex = 17
         '
         'Column1
         '
@@ -220,13 +230,13 @@ Partial Class Main
         '
         Me.Column5.HeaderText = "Path"
         Me.Column5.Name = "Column5"
-        Me.Column5.Visible = False
         '
         'Main
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(795, 371)
+        Me.Controls.Add(Me.ProgressBar2)
         Me.Controls.Add(Me.ButtonRebootSYS)
         Me.Controls.Add(Me.CheckBox)
         Me.Controls.Add(Me.LabelTimer)
@@ -246,7 +256,7 @@ Partial Class Main
         Me.MaximizeBox = False
         Me.Name = "Main"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
-        Me.Text = "Fastboot Flashing Xiaomi"
+        Me.Text = "Fastboot Flashing Xiaomi VB.Net"
         CType(Me.DataView, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
@@ -269,6 +279,7 @@ Partial Class Main
     Friend WithEvents LabelTimer As Label
     Friend WithEvents CheckBox As CheckBox
     Friend WithEvents ButtonRebootSYS As Button
+    Friend WithEvents ProgressBar2 As ProgressBar
     Friend WithEvents Column1 As DataGridViewCheckBoxColumn
     Friend WithEvents Column2 As DataGridViewComboBoxColumn
     Friend WithEvents Column3 As DataGridViewTextBoxColumn
