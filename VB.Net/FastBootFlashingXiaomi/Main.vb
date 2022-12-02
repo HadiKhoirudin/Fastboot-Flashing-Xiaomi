@@ -342,8 +342,7 @@ Public Class Main
                     totaldo = 0
                     Using stringReader As StringReader = New StringReader(TodoCommand)
                         While stringReader.Peek() <> -1
-                            While Not FastbootWorker.CancellationPending
-                                Dim str1 As String = stringReader.ReadLine()
+                            Dim str1 As String = stringReader.ReadLine()
                                 Dim command As String = ""
                                 Dim partition As String = ""
                                 Dim oem As String = ""
@@ -413,10 +412,9 @@ Public Class Main
                                     totaldo += 1
                                     ProcessBar1(totaldo, totalchecked)
                                 End If
-                                If FastbootWorker.CancellationPending Then
-                                    e.Cancel = True
-                                End If
-                            End While
+                            If FastbootWorker.CancellationPending Then
+                                e.Cancel = True
+                            End If
                         End While
                     End Using
 
