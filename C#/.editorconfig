@@ -1,0 +1,15 @@
+﻿[*.vb]
+
+# BC42030: Variable is passed by reference before it has been assigned a value
+dotnet_diagnostic.BC42030.severity = none
+
+[*.cs]
+
+# CS1591: Missing XML comment for publicly visible type or member
+dotnet_diagnostic.CS1591.severity = none
+
+# CS0162: Unreachable code detected
+dotnet_diagnostic.CS0162.severity = none
+
+# CS0649: Field 'Main.components' is never assigned to, and will always have its default value null
+dotnet_diagnostic.CS0649.severity = none
