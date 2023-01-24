@@ -363,7 +363,7 @@ namespace FastBootFlashingXiaomi
 
                             if (!string.IsNullOrEmpty(name))
                             {
-                                filename = path + name;
+                                filename = "\"" + path + name + "\"";
                             }
                             else
                             {
@@ -488,182 +488,74 @@ namespace FastBootFlashingXiaomi
                             {
                                 string str1 = stringReader.ReadLine();
                                 string command;
-                                string partition;
                                 string oem;
                                 string filename;
 
                                 if (!string.IsNullOrEmpty(str1))
                                 {
+                                    string exec = null;
+                                    string[] arg = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
                                     Console.WriteLine(str1);
 
+                                    ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
                                     totaldo = (totaldo + 1d).ToString();
-
                                     Consoles.Delay(0.5d);
 
-                                    string[] strArrays = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-
-                                    if (strArrays.Length == 1)
+                                    if (str1.Substring(0, 4).Contains("boot"))
                                     {
-                                        ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
-                                        command = strArrays[0];
-                                        if (command == "reboot")
+                                        if (str1.Substring(0, 12).Contains("recover"))
                                         {
-                                            RichLogs("Rebooting into system  >> ", Color.White, false, false);
-                                        }
-                                        else if (command == "reboot-edl")
-                                        {
-                                            RichLogs("Rebooting into EDL Mode  >> ", Color.White, false, false);
+                                            RichLogs("Booting >> " + arg[1] + " ", Color.White, false, false);
+                                            str1 = str1.Replace(arg[1] + " ", "");
                                         }
 
-                                        string exec = Consoles.Fastboot(command, (BackgroundWorker)sender, e);
-                                        if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                                        else if (str1.Substring(5, 4).Contains("boot"))
                                         {
-                                            RichLogs("[OK]", Color.Lime, false, true);
-                                        }
-                                        else
-                                        {
-                                            RichLogs("[Failed]", Color.Red, false, true);
-                                        }
-                                        ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
-                                    }
-
-                                    if (strArrays.Length == 2)
-                                    {
-                                        ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
-                                        command = strArrays[0];
-                                        if (command == "erase")
-                                        {
-                                            partition = strArrays[1];
-                                            RichLogs("Erasing  >> " + partition + " ", Color.White, false, false);
-
-                                            string exec = Consoles.Fastboot(command + " " + partition, (BackgroundWorker)sender, e);
-                                            if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
-                                            {
-                                                RichLogs("[OK]", Color.Lime, false, true);
-                                            }
-                                            else
-                                            {
-                                                RichLogs("[Failed]", Color.Red, false, true);
-                                            }
-                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
-                                        }
-                                        else if (command == "boot")
-                                        {
-                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
-                                            filename = strArrays[1];
-                                            if (File.Exists(filename))
-                                            {
-
-                                                string exec = Consoles.Fastboot("Booting  >> " + filename + " ", (BackgroundWorker)sender, e);
-                                                if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
-                                                {
-                                                    RichLogs("[OK]", Color.Lime, false, true);
-                                                }
-                                                else
-                                                {
-                                                    RichLogs("[Failed]", Color.Red, false, true);
-                                                }
-                                            }
-
-                                            else
-                                            {
-                                                RichLogs("File Doesn't Exist", Color.Yellow, false, true);
-                                            }
-                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
-                                        }
-                                        else if (command == "oem")
-                                        {
-                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
-                                            oem = strArrays[1];
-
-                                            string exec = Consoles.Fastboot("OEM Command >> " + oem + " ", (BackgroundWorker)sender, e);
-                                            if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
-                                            {
-                                                RichLogs("[OK]", Color.Lime, false, true);
-                                            }
-                                            else
-                                            {
-                                                RichLogs("[Failed]", Color.Red, false, true);
-                                            }
-                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
+                                            RichLogs("Booting >> " + arg[1] + " ", Color.White, false, false);
+                                            str1 = str1.Remove(5, 5);
                                         }
                                     }
 
-                                    if (strArrays.Length == 3)
+                                    else if (str1.Substring(0, 5).Contains("erase"))
                                     {
-                                        command = strArrays[0];
-                                        if (command == "flash")
-                                        {
-                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
-                                            partition = strArrays[1];
-                                            filename = strArrays[2];
-                                            if (File.Exists(filename))
-                                            {
-                                                RichLogs("Flashing >> " + partition + " ", Color.White, false, false);
+                                        RichLogs("Erasing  >> " + arg[1] + " ", Color.White, false, false);
+                                    }
 
-                                                string exec = Consoles.Fastboot(command + " " + partition + " " + filename, (BackgroundWorker)sender, e);
-                                                if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
-                                                {
-                                                    RichLogs("[OK]", Color.Lime, false, true);
-                                                }
-                                                else
-                                                {
-                                                    RichLogs("[Failed]", Color.Red, false, true);
-                                                }
-                                            }
+                                    else if (str1.Substring(0, 5).Contains("flash"))
+                                    {
+                                        RichLogs("Flashing >> " + arg[1] + " ", Color.White, false, false);
+                                    }
 
-                                            else
-                                            {
-                                                RichLogs("File Doesn't Exist", Color.Yellow, false, true);
-                                            }
-                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
-                                        }
-                                        else if (command == "erase")
-                                        {
-                                            partition = strArrays[1];
-                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
-                                            RichLogs("Erasing >> " + partition + " ", Color.White, false, false);
-                                            string exec = Consoles.Fastboot(command + " " + partition, (BackgroundWorker)sender, e);
-                                            if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
-                                            {
-                                                RichLogs("[OK]", Color.Lime, false, true);
-                                            }
-                                            else
-                                            {
-                                                RichLogs("[Failed]", Color.Red, false, true);
-                                            }
-                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
-                                        }
-                                        else if (command == "boot")
-                                        {
-                                            filename = strArrays[2];
-                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
-                                            RichLogs("Booting >> " + filename + " ", Color.White, false, false);
-                                            if (File.Exists(filename))
-                                            {
+                                    else if (str1.Substring(0, 3).Contains("oem"))
+                                    {
+                                        RichLogs("OEM Command >> " + arg[1] + " ", Color.White, false, false);
+                                    }
 
-                                                string exec = Consoles.Fastboot(command + " " + filename, (BackgroundWorker)sender, e);
-                                                if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
-                                                {
-                                                    RichLogs("[OK]", Color.Lime, false, true);
-                                                }
-                                                else
-                                                {
-                                                    RichLogs("[Failed]", Color.Red, false, true);
-                                                }
-                                            }
+                                    else if (str1.Substring(0, 6).Contains("reboot"))
+                                    {
+                                        RichLogs("Rebooting into system  >> ", Color.White, false, false);
+                                    }
 
-                                            else
-                                            {
-                                                RichLogs("File Doesn't Exist", Color.Yellow, false, true);
-                                            }
-                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
-                                        }
+                                    else if (str1.Substring(0, 10).Contains("reboot-edl"))
+                                    {
+                                        RichLogs("Rebooting into EDL Mode  >> ", Color.White, false, false);
 
                                     }
+
+                                    exec = Consoles.Fastboot(str1, (BackgroundWorker)sender, e);
+                                    if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                                    {
+                                        RichLogs("[OK]", Color.Lime, false, true);
+                                    }
+                                    else
+                                    {
+                                        RichLogs("[Failed]", Color.Red, false, true);
+                                    }
+
+                                    ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                                 }
-                                if (Conversions.ToBoolean(FastbootWorker.CancellationPending))
+                                if (FastbootWorker.CancellationPending)
                                 {
                                     break;
                                 }
@@ -726,6 +618,11 @@ namespace FastBootFlashingXiaomi
                     ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                 }
             }
+        }
+
+        private void Button1_Click(object sender, EventArgs e)
+        {
+            RichLogs(Consoles.Fastboot("getvar all", FastbootWorker, (DoWorkEventArgs)e), Color.Lime, false, true);
         }
 
         #endregion

@@ -17,7 +17,7 @@ namespace FastBootFlashingXiaomi
         }
         public static string Fastboot(string cmd, BackgroundWorker worker, DoWorkEventArgs ee)
         {
-            Console.WriteLine(cmd);
+            Console.WriteLine("Fastboot Command : " + cmd);
             string output = "";
             var fastBootExe = new Process();
             fastBootExe.StartInfo.FileName = Application.StartupPath + @"\fastboot.exe";
