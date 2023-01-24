@@ -511,7 +511,7 @@ Public Class Main
 
                                 End If
                             End If
-                            If sender.CancellationPending Then
+                            If FastbootWorker.CancellationPending Then
                                 Exit While
                             End If
                             ProcessBar2(totaldo, totalchecked)
