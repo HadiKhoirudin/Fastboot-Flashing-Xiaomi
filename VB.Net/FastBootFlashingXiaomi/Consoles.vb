@@ -10,7 +10,7 @@ Module Consoles
         End While
     End Sub
     Public Function Fastboot(cmd As String, worker As BackgroundWorker, ee As DoWorkEventArgs) As String
-        Console.WriteLine(cmd)
+        Console.WriteLine("Fastboot Command : " & cmd)
         Dim output As String = ""
         Dim fastBootExe As Process = New Process()
         fastBootExe.StartInfo.FileName = Application.StartupPath & "\fastboot.exe"

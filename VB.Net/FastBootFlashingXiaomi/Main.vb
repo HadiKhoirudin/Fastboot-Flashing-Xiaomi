@@ -285,7 +285,7 @@ Public Class Main
                         path = item.Cells(DataView.Columns(4).Index).Value & "\"
 
                         If name <> String.Empty Then
-                            filename = path & name
+                            filename = """" & path & name & """"
                         Else
                             filename = ""
                         End If
@@ -383,133 +383,54 @@ Public Class Main
                         While stringReader.Peek() <> -1
                             Dim str1 As String = stringReader.ReadLine()
                             Dim command As String
-                            Dim partition As String
                             Dim oem As String
                             Dim filename As String
 
                             If str1 <> String.Empty Then
+                                Dim exec As String = Nothing
+                                Dim arg As String() = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
 
                                 Console.WriteLine(str1)
 
+                                ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = True, Action))
                                 totaldo += 1
-
                                 Delay(0.5)
 
-                                Dim strArrays As String() = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+                                If str1.Substring(0, 4).Contains("boot") Then
+                                    If str1.Substring(0, 12).Contains("recover") Then
+                                        RichLogs("Booting >> " & arg(1) & " ", Color.White, False, False)
+                                        str1 = str1.Replace(arg(1) & " ", "")
 
-                                If strArrays.Length = 1 Then
-                                    ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = True, Action))
-                                    command = strArrays(0)
-                                    If command = "reboot" Then
-                                        RichLogs("Rebooting into system  >> ", Color.White, False, False)
-                                    ElseIf command = "reboot-edl" Then
-                                        RichLogs("Rebooting into EDL Mode  >> ", Color.White, False, False)
+                                    ElseIf str1.Substring(5, 4).Contains("boot") Then
+                                        RichLogs("Booting >> " & arg(1) & " ", Color.White, False, False)
+                                        str1 = str1.Remove(5, 5)
                                     End If
 
-                                    Dim exec As String = Fastboot(command, sender, e)
-                                    If exec.ToLower.Contains("okay") AndAlso exec.ToLower.Contains("finished") OrElse exec.ToLower.Contains("finished") Then
-                                        RichLogs("[OK]", Color.Lime, False, True)
-                                    Else
-                                        RichLogs("[Failed]", Color.Red, False, True)
-                                    End If
-                                    ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = False, Action))
+                                ElseIf str1.Substring(0, 5).Contains("erase") Then
+                                    RichLogs("Erasing  >> " & arg(1) & " ", Color.White, False, False)
+
+                                ElseIf str1.Substring(0, 5).Contains("flash") Then
+                                    RichLogs("Flashing >> " & arg(1) & " ", Color.White, False, False)
+
+                                ElseIf str1.Substring(0, 3).Contains("oem") Then
+                                    RichLogs("OEM Command >> " & arg(1) & " ", Color.White, False, False)
+
+                                ElseIf str1.Substring(0, 6).Contains("reboot") Then
+                                    RichLogs("Rebooting into system  >> ", Color.White, False, False)
+
+                                ElseIf str1.Substring(0, 10).Contains("reboot-edl") Then
+                                    RichLogs("Rebooting into EDL Mode  >> ", Color.White, False, False)
+
                                 End If
 
-                                If strArrays.Length = 2 Then
-                                    ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = True, Action))
-                                    command = strArrays(0)
-                                    If command = "erase" Then
-                                        partition = strArrays(1)
-                                        RichLogs("Erasing  >> " & partition & " ", Color.White, False, False)
-
-                                        Dim exec As String = Fastboot(command & " " & partition, sender, e)
-                                        If exec.ToLower.Contains("okay") AndAlso exec.ToLower.Contains("finished") OrElse exec.ToLower.Contains("finished") Then
-                                            RichLogs("[OK]", Color.Lime, False, True)
-                                        Else
-                                            RichLogs("[Failed]", Color.Red, False, True)
-                                        End If
-                                        ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = False, Action))
-                                    ElseIf command = "boot" Then
-                                        ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = True, Action))
-                                        filename = strArrays(1)
-                                        If File.Exists(filename) Then
-
-                                            Dim exec As String = Fastboot("Booting  >> " & filename & " ", sender, e)
-                                            If exec.ToLower.Contains("okay") AndAlso exec.ToLower.Contains("finished") OrElse exec.ToLower.Contains("finished") Then
-                                                RichLogs("[OK]", Color.Lime, False, True)
-                                            Else
-                                                RichLogs("[Failed]", Color.Red, False, True)
-                                            End If
-
-                                        Else
-                                            RichLogs("File Doesn't Exist", Color.Yellow, False, True)
-                                        End If
-                                        ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = False, Action))
-                                    ElseIf command = "oem" Then
-                                        ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = True, Action))
-                                        oem = strArrays(1)
-
-                                        Dim exec As String = Fastboot("OEM Command >> " & oem & " ", sender, e)
-                                        If exec.ToLower.Contains("okay") AndAlso exec.ToLower.Contains("finished") OrElse exec.ToLower.Contains("finished") Then
-                                            RichLogs("[OK]", Color.Lime, False, True)
-                                        Else
-                                            RichLogs("[Failed]", Color.Red, False, True)
-                                        End If
-                                        ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = False, Action))
-                                    End If
+                                exec = Fastboot(str1, sender, e)
+                                If exec.ToLower.Contains("okay") AndAlso exec.ToLower.Contains("finished") OrElse exec.ToLower.Contains("finished") Then
+                                    RichLogs("[OK]", Color.Lime, False, True)
+                                Else
+                                    RichLogs("[Failed]", Color.Red, False, True)
                                 End If
 
-                                If strArrays.Length = 3 Then
-                                    command = strArrays(0)
-                                    If command = "flash" Then
-                                        ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = True, Action))
-                                        partition = strArrays(1)
-                                        filename = strArrays(2)
-                                        If File.Exists(filename) Then
-                                            RichLogs("Flashing >> " & partition & " ", Color.White, False, False)
-
-                                            Dim exec As String = Fastboot(command & " " & partition & " " & filename, sender, e)
-                                            If exec.ToLower.Contains("okay") AndAlso exec.ToLower.Contains("finished") OrElse exec.ToLower.Contains("finished") Then
-                                                RichLogs("[OK]", Color.Lime, False, True)
-                                            Else
-                                                RichLogs("[Failed]", Color.Red, False, True)
-                                            End If
-
-                                        Else
-                                            RichLogs("File Doesn't Exist", Color.Yellow, False, True)
-                                        End If
-                                        ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = False, Action))
-                                    ElseIf command = "erase" Then
-                                        partition = strArrays(1)
-                                        ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = True, Action))
-                                        RichLogs("Erasing >> " & partition & " ", Color.White, False, False)
-                                        Dim exec As String = Fastboot(command & " " & partition, sender, e)
-                                        If exec.ToLower.Contains("okay") AndAlso exec.ToLower.Contains("finished") OrElse exec.ToLower.Contains("finished") Then
-                                            RichLogs("[OK]", Color.Lime, False, True)
-                                        Else
-                                            RichLogs("[Failed]", Color.Red, False, True)
-                                        End If
-                                        ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = False, Action))
-                                    ElseIf command = "boot" Then
-                                        filename = strArrays(2)
-                                        ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = True, Action))
-                                        RichLogs("Booting >> " & filename & " ", Color.White, False, False)
-                                        If File.Exists(filename) Then
-
-                                            Dim exec As String = Fastboot(command & " " & filename, sender, e)
-                                            If exec.ToLower.Contains("okay") AndAlso exec.ToLower.Contains("finished") OrElse exec.ToLower.Contains("finished") Then
-                                                RichLogs("[OK]", Color.Lime, False, True)
-                                            Else
-                                                RichLogs("[Failed]", Color.Red, False, True)
-                                            End If
-
-                                        Else
-                                            RichLogs("File Doesn't Exist", Color.Yellow, False, True)
-                                        End If
-                                        ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = False, Action))
-                                    End If
-
-                                End If
+                                ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = False, Action))
                             End If
                             If FastbootWorker.CancellationPending Then
                                 Exit While
