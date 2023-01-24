@@ -1,9 +1,9 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class Main
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -20,9 +20,14 @@ Partial Class Main
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.  
     'Do not modify it using the code editor.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.DataView = New System.Windows.Forms.DataGridView()
+        Me.Column1 = New System.Windows.Forms.DataGridViewCheckBoxColumn()
+        Me.Column2 = New System.Windows.Forms.DataGridViewComboBoxColumn()
+        Me.Column3 = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.Column4 = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.Column5 = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.RichTextBox = New System.Windows.Forms.RichTextBox()
         Me.TextBoxLocation = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
@@ -39,11 +44,7 @@ Partial Class Main
         Me.CheckBox = New System.Windows.Forms.CheckBox()
         Me.ButtonRebootSYS = New System.Windows.Forms.Button()
         Me.ProgressBar2 = New System.Windows.Forms.ProgressBar()
-        Me.Column1 = New System.Windows.Forms.DataGridViewCheckBoxColumn()
-        Me.Column2 = New System.Windows.Forms.DataGridViewComboBoxColumn()
-        Me.Column3 = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.Column4 = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.Column5 = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.ProgressBar3 = New System.Windows.Forms.ProgressBar()
         CType(Me.DataView, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -59,6 +60,36 @@ Partial Class Main
         Me.DataView.RowHeadersVisible = False
         Me.DataView.Size = New System.Drawing.Size(432, 288)
         Me.DataView.TabIndex = 0
+        '
+        'Column1
+        '
+        Me.Column1.HeaderText = ""
+        Me.Column1.Name = "Column1"
+        Me.Column1.Width = 20
+        '
+        'Column2
+        '
+        Me.Column2.HeaderText = "Command"
+        Me.Column2.Items.AddRange(New Object() {"boot", "erase", "flash", "oem", "reboot", "reboot-edl"})
+        Me.Column2.Name = "Column2"
+        Me.Column2.Resizable = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.Column2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic
+        '
+        'Column3
+        '
+        Me.Column3.HeaderText = "Partition"
+        Me.Column3.Name = "Column3"
+        '
+        'Column4
+        '
+        Me.Column4.HeaderText = "Filename                  Double Click [...]"
+        Me.Column4.Name = "Column4"
+        Me.Column4.Width = 208
+        '
+        'Column5
+        '
+        Me.Column5.HeaderText = "Path"
+        Me.Column5.Name = "Column5"
         '
         'RichTextBox
         '
@@ -108,9 +139,12 @@ Partial Class Main
         '
         Me.ProgressBar1.Location = New System.Drawing.Point(12, 342)
         Me.ProgressBar1.Margin = New System.Windows.Forms.Padding(3, 0, 3, 0)
+        Me.ProgressBar1.MarqueeAnimationSpeed = 50
         Me.ProgressBar1.Name = "ProgressBar1"
         Me.ProgressBar1.Size = New System.Drawing.Size(776, 10)
+        Me.ProgressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee
         Me.ProgressBar1.TabIndex = 6
+        Me.ProgressBar1.Visible = False
         '
         'Label2
         '
@@ -201,41 +235,22 @@ Partial Class Main
         Me.ProgressBar2.Size = New System.Drawing.Size(776, 10)
         Me.ProgressBar2.TabIndex = 17
         '
-        'Column1
+        'ProgressBar3
         '
-        Me.Column1.HeaderText = ""
-        Me.Column1.Name = "Column1"
-        Me.Column1.Width = 20
-        '
-        'Column2
-        '
-        Me.Column2.HeaderText = "Command"
-        Me.Column2.Items.AddRange(New Object() {"boot", "erase", "flash", "oem", "reboot", "reboot-edl"})
-        Me.Column2.Name = "Column2"
-        Me.Column2.Resizable = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.Column2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic
-        '
-        'Column3
-        '
-        Me.Column3.HeaderText = "Partition"
-        Me.Column3.Name = "Column3"
-        '
-        'Column4
-        '
-        Me.Column4.HeaderText = "Filename                  Double Click [...]"
-        Me.Column4.Name = "Column4"
-        Me.Column4.Width = 208
-        '
-        'Column5
-        '
-        Me.Column5.HeaderText = "Path"
-        Me.Column5.Name = "Column5"
+        Me.ProgressBar3.Location = New System.Drawing.Point(12, 342)
+        Me.ProgressBar3.Margin = New System.Windows.Forms.Padding(3, 0, 3, 0)
+        Me.ProgressBar3.MarqueeAnimationSpeed = 50
+        Me.ProgressBar3.Name = "ProgressBar3"
+        Me.ProgressBar3.Size = New System.Drawing.Size(776, 10)
+        Me.ProgressBar3.TabIndex = 18
         '
         'Main
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(795, 371)
+        Me.ClientSize = New System.Drawing.Size(795, 369)
+        Me.Controls.Add(Me.ProgressBar1)
+        Me.Controls.Add(Me.ProgressBar3)
         Me.Controls.Add(Me.ProgressBar2)
         Me.Controls.Add(Me.ButtonRebootSYS)
         Me.Controls.Add(Me.CheckBox)
@@ -246,7 +261,6 @@ Partial Class Main
         Me.Controls.Add(Me.ComboBoxDevices)
         Me.Controls.Add(Me.LabelProductName)
         Me.Controls.Add(Me.Label2)
-        Me.Controls.Add(Me.ProgressBar1)
         Me.Controls.Add(Me.ButtonFlash)
         Me.Controls.Add(Me.ButtonBrowse)
         Me.Controls.Add(Me.Label1)
@@ -285,4 +299,5 @@ Partial Class Main
     Friend WithEvents Column3 As DataGridViewTextBoxColumn
     Friend WithEvents Column4 As DataGridViewTextBoxColumn
     Friend WithEvents Column5 As DataGridViewTextBoxColumn
+    Friend WithEvents ProgressBar3 As ProgressBar
 End Class

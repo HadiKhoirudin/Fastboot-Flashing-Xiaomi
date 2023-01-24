@@ -1,6 +1,5 @@
 ﻿Imports System.IO
 Imports System.Text
-Imports System.Threading
 Imports LibUsbDotNet
 Imports LibUsbDotNet.Main
 
@@ -10,6 +9,7 @@ Public Class Fastboot
     Private Const HEADER_SIZE As Integer = 4
     Private Const BLOCK_SIZE As Integer = 512 * 1024 ' 512 KB
 
+    Public Property LengthWritter As String = Nothing
     Public Property Timeout As Integer = 3000
 
     Private device As UsbDevice
@@ -115,7 +115,7 @@ Public Class Fastboot
         Dim writeEndpoint = device.OpenEndpointWriter(WriteEndpointID.Ep01)
         Dim readEndpoint = device.OpenEndpointReader(ReadEndpointID.Ep01)
 
-        Dim wrAct As Integer = Nothing
+        Dim wrAct As Integer = pCommand.Length
         writeEndpoint.Write(pCommand, Timeout, wrAct)
 
         If wrAct <> pCommand.Length Then
@@ -123,10 +123,10 @@ Public Class Fastboot
         End If
 
         Dim status As Status
-        Dim response = New StringBuilder()
-        Dim buffer = New Byte(63) {}
+        Dim response As StringBuilder = New StringBuilder()
+        Dim buffer As Byte() = New Byte(63) {}
         Dim strBuffer As String = Nothing
-        Dim rdAct As Integer = Nothing
+        Dim rdAct As Integer = buffer.Length
 
         While True
             readEndpoint.Read(buffer, Timeout, rdAct)
@@ -136,7 +136,7 @@ Public Class Fastboot
             If strBuffer.Length < HEADER_SIZE Then
                 status = Status.Unknown
             Else
-                Dim header = New String(strBuffer.Take(HEADER_SIZE).ToArray())
+                Dim header As String = New String(strBuffer.Take(HEADER_SIZE).ToArray())
 
                 status = GetStatusFromString(header)
             End If
@@ -150,7 +150,7 @@ Public Class Fastboot
             End If
         End While
 
-        Dim str = response.ToString().Replace(CStr(Microsoft.VisualBasic.Constants.vbCr), CStr(String.Empty)).Replace(Microsoft.VisualBasic.Constants.vbNullChar, String.Empty)
+        Dim str As String = response.ToString().Replace(CStr(Microsoft.VisualBasic.Constants.vbCr), CStr(String.Empty)).Replace(Microsoft.VisualBasic.Constants.vbNullChar, String.Empty)
 
         Return New Response(status, str) With {
                     .RawData = Encoding.ASCII.GetBytes(strBuffer)
@@ -166,10 +166,8 @@ Public Class Fastboot
 
 
     Private Sub TransferBlock(ByVal stream As FileStream, ByVal writeEndpoint As UsbEndpointWriter, ByVal buffer As Byte(), ByVal size As Integer)
-        stream.Read(buffer, 0, size)
-        Dim act As Integer = Nothing
+        Dim act As Integer = stream.Read(buffer, 0, size)
         writeEndpoint.Write(buffer, Timeout, act)
-
         If act <> size Then
             Throw New Exception($"Failed to transfer block (sent {act} of {size})")
         End If
@@ -177,27 +175,24 @@ Public Class Fastboot
 
 
     Public Sub UploadData(ByVal stream As FileStream)
-        Dim writeEndpoint = device.OpenEndpointWriter(WriteEndpointID.Ep01)
-        Dim readEndpoint = device.OpenEndpointReader(ReadEndpointID.Ep01)
+        Dim writeEndpoint As UsbEndpointWriter = device.OpenEndpointWriter(WriteEndpointID.Ep01)
+        Dim readEndpoint As UsbEndpointReader = device.OpenEndpointReader(ReadEndpointID.Ep01)
 
-        Dim totallength = stream.Length
-        Dim length = stream.Length
-        Dim buffer = New Byte(524287) {}
+        Dim totallength As String = stream.Length / 10000
+        Dim length As String = stream.Length
+        Dim buffer As Byte() = New Byte(524287) {}
 
         SendDataCommand(length)
 
-        Dim Progress As New ProgressBar()
-        Progress.Minimum = 0
-        Progress.Maximum = 100
-        Dim resultprogress As Integer
-        Dim fileOffset As Long = 0
+        Dim resultprogress As String
+        Dim fileOffset As String = 0
         Dim totalprogress As Long = 0
-
+        '100000000
         While length >= BLOCK_SIZE
             fileOffset += stream.Length
-            totalprogress += length
-            resultprogress = CInt(Math.Round((fileOffset / 100))) - CInt(Math.Round((totalprogress / 100)))
-
+            totalprogress += length / 10000
+            resultprogress = CInt(Math.Round((fileOffset / 100000000))) - CInt(Math.Round((totalprogress / 100000000)))
+            Console.WriteLine("Result : " & resultprogress & " Total : " & totallength)
             If resultprogress < totallength Then
                 Main.SharedUI.ProcessBar1(resultprogress, totallength)
             End If
@@ -211,19 +206,19 @@ Public Class Fastboot
             TransferBlock(stream, writeEndpoint, buffer, length)
         End If
 
-        Dim resBuffer = New Byte(63) {}
+        Dim resBuffer As Byte() = New Byte(63) {}
 
-        readEndpoint.Read(resBuffer, Timeout, Nothing)
+        readEndpoint.Read(resBuffer, Timeout, resBuffer.Length)
 
-        Dim strBuffer = Encoding.ASCII.GetString(resBuffer)
+        Dim strBuffer As String = Encoding.ASCII.GetString(resBuffer)
 
         If strBuffer.Length < HEADER_SIZE Then
             Throw New Exception($"Invalid response from device: {strBuffer}")
         End If
 
-        Dim header = New String(strBuffer.Take(HEADER_SIZE).ToArray())
+        Dim header As String = New String(strBuffer.Take(HEADER_SIZE).ToArray())
 
-        Dim status = GetStatusFromString(header)
+        Dim status As Status = GetStatusFromString(header)
 
         If status <> Status.Okay Then
             Throw New Exception($"Invalid status: {strBuffer}")

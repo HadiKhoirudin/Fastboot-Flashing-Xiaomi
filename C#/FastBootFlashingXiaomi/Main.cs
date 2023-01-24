@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -29,22 +30,23 @@ namespace FastBootFlashingXiaomi
                 _FastbootWorker = value;
             }
         }
-        public static Fastboot Fastboot = new Fastboot();
 
         internal static Main SharedUI;
         public string WorkerTodo;
         public bool IsConnected;
         public string TodoCommand;
         public string totalchecked;
+        public string DevicesName;
         public string totaldo;
         public long totallength = 0L;
         public int counter = 30;
+        public TextBox textbox = new TextBox();
         #region UI
         public Main()
         {
             FastbootWorker = new BackgroundWorker();
-            Load += Main_Load;
             InitializeComponent();
+            Load += Main_Load;
             SharedUI = this;
         }
 
@@ -107,19 +109,24 @@ namespace FastBootFlashingXiaomi
 
 
         #region Function
-        public bool FastbootConnect()
+        public bool FastbootConnect(BackgroundWorker worker, DoWorkEventArgs ee)
         {
+            IsConnected = false;
             counter = 30;
-            RichLogs("Waiting devices to connect... ", Color.White, false, false);
-            ComboBoxDevices.Invoke(new Action(() => ComboBoxDevices.Text = ""));
+            RichLogs("Waiting Fastboot devices... ", Color.White, false, false);
+            ComboBoxDevices.Invoke(new Action(() => ComboBoxDevices.Text = "Waiting devices to connect... "));
             LabelProductName.Invoke(new Action(() => LabelProductName.Text = "-"));
-            bool status = Conversions.ToBoolean(Fastboot.Wait());
+            bool status = Consoles.Fastboot("getvar product", worker, ee).Contains("product");
             if (status)
             {
-                Fastboot.Connect();
                 IsConnected = true;
-                ComboBoxDevices.Invoke(new Action(() => ComboBoxDevices.Text = "Fastboot Device - " + Fastboot.GetSerialNumber()));
-                LabelProductName.Invoke(new Action(() => LabelProductName.Text = Fastboot.Command("getvar:product").Payload));
+                textbox.Clear();
+                textbox.Text = Consoles.Fastboot("getvar product", worker, ee).Replace("product: ", "");
+                LabelProductName.Invoke(new Action(() => LabelProductName.Text = textbox.Lines[0]));
+
+                textbox.Clear();
+                textbox.Text = Consoles.Fastboot("getvar serialno", worker, ee).Replace("serialno: ", "");
+                ComboBoxDevices.Invoke(new Action(() => ComboBoxDevices.Text = "Fastboot Serial Devices - " + textbox.Lines[0]));
                 return true;
             }
             else
@@ -130,14 +137,6 @@ namespace FastBootFlashingXiaomi
             return false;
         }
 
-        public void Delay(double dblSecs)
-        {
-            DateTime.Now.AddSeconds(0.0000115740740740741d);
-            var dateTime = DateTime.Now.AddSeconds(0.0000115740740740741d);
-            var dateTime1 = dateTime.AddSeconds(dblSecs);
-            while (DateTime.Compare(DateTime.Now, dateTime1) <= 0)
-                Application.DoEvents();
-        }
         private void CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (DataView.Rows.Count > 0)
@@ -209,7 +208,7 @@ namespace FastBootFlashingXiaomi
                 resultproduct.Text = product;
 
                 var strs = new List<string>();
-                var lines = resultproduct.Lines;
+                string[] lines = resultproduct.Lines;
                 int num = 0;
 
                 while (num < lines.Length)
@@ -220,7 +219,7 @@ namespace FastBootFlashingXiaomi
                 }
 
                 product = strs[0];
-
+                DevicesName = product;
                 LabelProductName.Text = product;
                 if (str.Contains(")"))
                 {
@@ -243,23 +242,21 @@ namespace FastBootFlashingXiaomi
                             l = str1.Length;
                             p = str1.IndexOf("||") - 1;
                             str1 = str1.Remove(p, l - p);
-                            str1 = str1.Replace("fastboot %* ", "").Replace(@"%~dp0images\", "").Replace("pause", "");
+                            str1 = str1.Replace("fastboot %* ", "").Replace(@"%~dp0images\", "").Replace("pause", "").Replace("::", "").Replace("\"", "");
                         }
                         else
                         {
-                            str1 = str1.Replace("fastboot %* ", "").Replace(@"%~dp0images\", "").Replace("pause", "");
+                            str1 = str1.Replace("fastboot %* ", "").Replace(@"%~dp0images\", "").Replace("pause", "").Replace("::", "").Replace("\"", "");
                         }
 
                         if (!string.IsNullOrEmpty(str1))
                         {
 
-                            Console.WriteLine(str1);
-
-                            var strArrays = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                            string[] strArrays = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
                             command = strArrays[0];
 
-                            if (command != "getvar")
+                            if (command != "getvar" && command != "echo")
                             {
                                 if (strArrays.Length == 2)
                                 {
@@ -281,22 +278,19 @@ namespace FastBootFlashingXiaomi
             }
 
         }
-        public void ReadFastbootDeviceInfo()
+        public void ReadFastbootDeviceInfo(BackgroundWorker worker, DoWorkEventArgs e)
         {
 
-            RichLogs("Reading Device Info : ... ", Color.White, false, true);
-            RichLogs(Fastboot.Command("getvar:all").Payload, Color.White, false, true);
 
         }
         public void AllIsDone(object sender, RunWorkerCompletedEventArgs e)
         {
-            RichLogs(" ", Color.Red, true, true);
             RichLogs("_______________________________________________", Color.WhiteSmoke, true, true);
             RichLogs("All Progress Completed ... ", Color.WhiteSmoke, false, true);
-            if (IsConnected)
-            {
-                Fastboot.Disconnect();
-            }
+            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
+            ProgressBar2.Invoke(new Action(() => ProgressBar2.Value = 100));
+            ProgressBar3.Invoke(new Action(() => ProgressBar3.Value = 100));
+            ProcessKill();
         }
         private void ButtonSTOP_Click(object sender, EventArgs e)
         {
@@ -304,6 +298,29 @@ namespace FastBootFlashingXiaomi
             {
                 counter = 1;
                 FastbootWorker.CancelAsync();
+            }
+            ProcessKill();
+        }
+
+        public void ProcessKill()
+        {
+            string[] array = new string[] { "adb", "adb.exe", "fastboot", "fastboot.exe" };
+
+            foreach (string text in array)
+            {
+                Process[] processes = Process.GetProcesses();
+
+                foreach (Process process in processes)
+                {
+
+                    if ((process.ProcessName.ToLower() ?? "") == (text.ToLower() ?? ""))
+                    {
+                        process.Kill();
+                        process.WaitForExit();
+                        process.Dispose();
+                    }
+                }
+
             }
         }
 
@@ -450,15 +467,19 @@ namespace FastBootFlashingXiaomi
         }
         private void Worker(object sender, DoWorkEventArgs e)
         {
-            bool Connect = FastbootConnect();
+            bool Connect = FastbootConnect((BackgroundWorker)sender, e);
             if (Connect)
             {
+                ProgressBar2.Invoke(new Action(() => ProgressBar2.Value = 0));
+                ProgressBar3.Invoke(new Action(() => ProgressBar3.Value = 0));
                 RichLogs("Device Connected! ", Color.Lime, false, true);
-                Delay(0.5d);
+                Consoles.Delay(0.5d);
                 if (WorkerTodo == "flash")
                 {
-                    string product = Fastboot.Command("getvar:product").Payload;
-                    if (product.Contains(LabelProductName.Text))
+                    textbox.Clear();
+                    textbox.Text = Consoles.Fastboot("getvar product", (BackgroundWorker)sender, e).Replace("product: ", "");
+                    string product = textbox.Lines[0];
+                    if (product.Contains(DevicesName))
                     {
                         totaldo = 0.ToString();
                         using (var stringReader = new StringReader(TodoCommand))
@@ -478,43 +499,94 @@ namespace FastBootFlashingXiaomi
 
                                     totaldo = (totaldo + 1d).ToString();
 
-                                    Delay(0.5d);
+                                    Consoles.Delay(0.5d);
 
-                                    var strArrays = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                                    string[] strArrays = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
                                     if (strArrays.Length == 1)
                                     {
+                                        ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
                                         command = strArrays[0];
-                                        RichLogs(command + " ", Color.White, false, false);
-                                        RichLogs(Fastboot.Command(command).Status.ToString(), Color.Lime, false, true);
+                                        if (command == "reboot")
+                                        {
+                                            RichLogs("Rebooting into system  >> ", Color.White, false, false);
+                                        }
+                                        else if (command == "reboot-edl")
+                                        {
+                                            RichLogs("Rebooting into EDL Mode  >> ", Color.White, false, false);
+                                        }
+
+                                        string exec = Consoles.Fastboot(command, (BackgroundWorker)sender, e);
+                                        if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                                        {
+                                            RichLogs("[OK]", Color.Lime, false, true);
+                                        }
+                                        else
+                                        {
+                                            RichLogs("[Failed]", Color.Red, false, true);
+                                        }
+                                        ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                                     }
 
                                     if (strArrays.Length == 2)
                                     {
+                                        ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
                                         command = strArrays[0];
                                         if (command == "erase")
                                         {
                                             partition = strArrays[1];
-                                            RichLogs(command + " " + partition + " ", Color.White, false, false);
-                                            RichLogs(Fastboot.Command(command + ":" + partition).Status.ToString(), Color.Lime, false, true);
+                                            RichLogs("Erasing  >> " + partition + " ", Color.White, false, false);
+
+                                            string exec = Consoles.Fastboot(command + " " + partition, (BackgroundWorker)sender, e);
+                                            if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                                            {
+                                                RichLogs("[OK]", Color.Lime, false, true);
+                                            }
+                                            else
+                                            {
+                                                RichLogs("[Failed]", Color.Red, false, true);
+                                            }
+                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                                         }
                                         else if (command == "boot")
                                         {
+                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
                                             filename = strArrays[1];
                                             if (File.Exists(filename))
                                             {
-                                                Fastboot.UploadData(new FileStream(filename, FileMode.Open));
-                                                RichLogs(Fastboot.Command(command).Status.ToString(), Color.Lime, false, true);
+
+                                                string exec = Consoles.Fastboot("Booting  >> " + filename + " ", (BackgroundWorker)sender, e);
+                                                if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                                                {
+                                                    RichLogs("[OK]", Color.Lime, false, true);
+                                                }
+                                                else
+                                                {
+                                                    RichLogs("[Failed]", Color.Red, false, true);
+                                                }
                                             }
+
                                             else
                                             {
                                                 RichLogs("File Doesn't Exist", Color.Yellow, false, true);
                                             }
+                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                                         }
                                         else if (command == "oem")
                                         {
+                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
                                             oem = strArrays[1];
-                                            RichLogs(Fastboot.Command(command + " " + oem).Status.ToString(), Color.Lime, false, true);
+
+                                            string exec = Consoles.Fastboot("OEM Command >> " + oem + " ", (BackgroundWorker)sender, e);
+                                            if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                                            {
+                                                RichLogs("[OK]", Color.Lime, false, true);
+                                            }
+                                            else
+                                            {
+                                                RichLogs("[Failed]", Color.Red, false, true);
+                                            }
+                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                                         }
                                     }
 
@@ -523,42 +595,75 @@ namespace FastBootFlashingXiaomi
                                         command = strArrays[0];
                                         if (command == "flash")
                                         {
+                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
                                             partition = strArrays[1];
                                             filename = strArrays[2];
                                             if (File.Exists(filename))
                                             {
-                                                RichLogs(command + " " + partition + " ", Color.White, false, false);
-                                                Fastboot.UploadData(new FileStream(filename, FileMode.Open));
-                                                RichLogs(Fastboot.Command(command + ":" + partition).Status.ToString(), Color.Lime, false, true);
+                                                RichLogs("Flashing >> " + partition + " ", Color.White, false, false);
+
+                                                string exec = Consoles.Fastboot(command + " " + partition + " " + filename, (BackgroundWorker)sender, e);
+                                                if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                                                {
+                                                    RichLogs("[OK]", Color.Lime, false, true);
+                                                }
+                                                else
+                                                {
+                                                    RichLogs("[Failed]", Color.Red, false, true);
+                                                }
                                             }
+
                                             else
                                             {
                                                 RichLogs("File Doesn't Exist", Color.Yellow, false, true);
                                             }
+                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                                         }
                                         else if (command == "erase")
                                         {
                                             partition = strArrays[1];
-                                            RichLogs(Fastboot.Command(command + ":" + partition).Status.ToString(), Color.Lime, false, true);
+                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
+                                            RichLogs("Erasing >> " + partition + " ", Color.White, false, false);
+                                            string exec = Consoles.Fastboot(command + " " + partition, (BackgroundWorker)sender, e);
+                                            if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                                            {
+                                                RichLogs("[OK]", Color.Lime, false, true);
+                                            }
+                                            else
+                                            {
+                                                RichLogs("[Failed]", Color.Red, false, true);
+                                            }
+                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                                         }
                                         else if (command == "boot")
                                         {
                                             filename = strArrays[2];
-                                            RichLogs(command + " ", Color.White, false, false);
+                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
+                                            RichLogs("Booting >> " + filename + " ", Color.White, false, false);
                                             if (File.Exists(filename))
                                             {
-                                                Fastboot.UploadData(new FileStream(filename, FileMode.Open));
-                                                RichLogs(Fastboot.Command(command).Status.ToString(), Color.Lime, false, true);
+
+                                                string exec = Consoles.Fastboot(command + " " + filename, (BackgroundWorker)sender, e);
+                                                if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                                                {
+                                                    RichLogs("[OK]", Color.Lime, false, true);
+                                                }
+                                                else
+                                                {
+                                                    RichLogs("[Failed]", Color.Red, false, true);
+                                                }
                                             }
+
                                             else
                                             {
                                                 RichLogs("File Doesn't Exist", Color.Yellow, false, true);
                                             }
+                                            ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                                         }
 
                                     }
                                 }
-                                if (FastbootWorker.CancellationPending)
+                                if (Conversions.ToBoolean(FastbootWorker.CancellationPending))
                                 {
                                     break;
                                 }
@@ -569,7 +674,6 @@ namespace FastBootFlashingXiaomi
 
                     else
                     {
-                        Console.WriteLine("From Device : " + Fastboot.Command("getvar:product").Payload + "From Image : " + LabelProductName.Text);
                         RichLogs("Error! Missmatching image and device.", Color.Red, false, true);
                     }
                 }
@@ -577,20 +681,49 @@ namespace FastBootFlashingXiaomi
 
                 else if (WorkerTodo == "info")
                 {
-                    ReadFastbootDeviceInfo();
+                    ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
+                    RichLogs("Reading Device Info : ... ", Color.White, false, false);
+                    string exec = Consoles.Fastboot("getvar all", (BackgroundWorker)sender, e).Replace("(bootloader) ", "").Replace(":", "*" + Constants.vbTab + "[ i]  ");
+                    if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                    {
+                        RichLogs("[OK]", Color.Lime, false, true);
+                        RichLogs(exec, Color.SkyBlue, false, true);
+                    }
+                    else
+                    {
+                        RichLogs("[Failed]", Color.Red, false, true);
+                    }
+                    ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                 }
-
                 else if (WorkerTodo == "reboot")
                 {
-                    RichLogs("Rebooting into Android... ", Color.White, false, false);
-                    RichLogs(Fastboot.Command("reboot").Status.ToString(), Color.Lime, false, true);
+                    ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
+                    RichLogs("Rebooting into Android : ... ", Color.White, false, false);
+                    string exec = Consoles.Fastboot("reboot", (BackgroundWorker)sender, e);
+                    if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                    {
+                        RichLogs("[OK]", Color.Lime, false, true);
+                    }
+                    else
+                    {
+                        RichLogs("[Failed]", Color.Red, false, true);
+                    }
+                    ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                 }
-
                 else if (WorkerTodo == "EDL")
                 {
-                    RichLogs("Rebooting into EDL Mode... ", Color.White, false, false);
-                    RichLogs(Fastboot.Command("reboot-edl").Status.ToString(), Color.Lime, false, true);
-
+                    ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
+                    RichLogs("Rebooting into EDL Mode : ... ", Color.White, false, false);
+                    string exec = Consoles.Fastboot("reboot-edl", (BackgroundWorker)sender, e);
+                    if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
+                    {
+                        RichLogs("[OK]", Color.Lime, false, true);
+                    }
+                    else
+                    {
+                        RichLogs("[Failed]", Color.Red, false, true);
+                    }
+                    ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = false));
                 }
             }
         }
