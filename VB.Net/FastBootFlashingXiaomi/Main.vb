@@ -148,7 +148,7 @@ Public Class Main
             Dim str As String = String.Concat(New String() {File.ReadAllText(openFileDialog.FileName)})
 
             Dim product As String = str.Substring(str.LastIndexOf("^product: *") + 1)
-            product = product.Replace("product: *", "").Replace("""", "").Replace(" || exit /B 1", "")
+            product = product.Replace("product: *", "").Replace("""", "").Replace(" || exit /B 1", "").Replace(" || echo Missmatching image and device", "").Replace(" || @echo error : Missmatching image and device && exit /B 1", "")
 
             Dim resultproduct As New TextBox
 
@@ -184,9 +184,9 @@ Public Class Main
                         l = str1.Length
                         p = str1.IndexOf("||") - 1
                         str1 = str1.Remove(p, l - p)
-                        str1 = str1.Replace("fastboot %* ", "").Replace("%~dp0images\", "").Replace("pause", "").Replace("::", "").Replace("""", "")
+                        str1 = str1.Replace("fastboot %* ", "").Replace("%~dp0images\", "").Replace("%~dp0\images\", "").Replace("pause", "").Replace("::", "").Replace("""", "")
                     Else
-                        str1 = str1.Replace("fastboot %* ", "").Replace("%~dp0images\", "").Replace("pause", "").Replace("::", "").Replace("""", "")
+                        str1 = str1.Replace("fastboot %* ", "").Replace("%~dp0images\", "").Replace("%~dp0\images\", "").Replace("pause", "").Replace("::", "").Replace("""", "")
                     End If
 
                     If str1 <> String.Empty Then
@@ -216,10 +216,7 @@ Public Class Main
         End If
 
     End Sub
-    Public Sub ReadFastbootDeviceInfo(worker As BackgroundWorker, e As DoWorkEventArgs)
 
-
-    End Sub
     Public Sub AllIsDone(sender As Object, e As RunWorkerCompletedEventArgs)
         RichLogs("_______________________________________________", Color.WhiteSmoke, True, True)
         RichLogs("All Progress Completed ... ", Color.WhiteSmoke, False, True)
@@ -300,7 +297,32 @@ Public Class Main
 
                         Else
 
-                            TodoCommand = String.Concat(TodoCommand, commands & " " & args & " " & filename & vbCrLf & "")
+                            'boot
+                            'erase
+                            'flash
+                            'oem
+                            'reboot
+                            'reboot-edl
+
+                            If commands = "boot" Then
+                                TodoCommand = String.Concat(TodoCommand, commands & " " & filename & vbCrLf & "")
+
+                            ElseIf commands = "erase" Then
+                                TodoCommand = String.Concat(TodoCommand, commands & " " & args & vbCrLf & "")
+
+                            ElseIf commands = "flash" Then
+                                TodoCommand = String.Concat(TodoCommand, commands & " " & args & " " & filename & vbCrLf & "")
+
+                            ElseIf commands = "oem" Then
+                                TodoCommand = String.Concat(TodoCommand, commands & " " & args & vbCrLf & "")
+
+                            ElseIf commands = "reboot" Then
+                                TodoCommand = String.Concat(TodoCommand, commands & vbCrLf & "")
+
+                            ElseIf commands = "reboot-edl" Then
+                                TodoCommand = String.Concat(TodoCommand, commands & vbCrLf & "")
+
+                            End If
 
                         End If
 
@@ -381,49 +403,39 @@ Public Class Main
                     totaldo = 0
                     Using stringReader As StringReader = New StringReader(TodoCommand)
                         While stringReader.Peek() <> -1
-                            Dim str1 As String = stringReader.ReadLine()
-                            Dim command As String
-                            Dim oem As String
-                            Dim filename As String
+                            Dim cmd As String = stringReader.ReadLine()
 
-                            If str1 <> String.Empty Then
+                            If cmd <> String.Empty Then
                                 Dim exec As String = Nothing
-                                Dim arg As String() = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+                                Dim arg As String() = cmd.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
 
-                                Console.WriteLine(str1)
+                                Console.WriteLine(cmd)
 
                                 ProgressBar1.Invoke(CType(Sub() ProgressBar1.Visible = True, Action))
                                 totaldo += 1
                                 Delay(0.5)
 
-                                If str1.Substring(0, 4).Contains("boot") Then
-                                    If str1.Substring(0, 12).Contains("recover") Then
-                                        RichLogs("Booting >> " & arg(1) & " ", Color.White, False, False)
-                                        str1 = str1.Replace(arg(1) & " ", "")
+                                If cmd.Substring(0, 4).Contains("boot") Then
+                                    RichLogs("Booting >> " & Path.GetFileName(cmd.Replace("boot ", "").Replace("""", "")) & " ", Color.White, False, False)
 
-                                    ElseIf str1.Substring(5, 4).Contains("boot") Then
-                                        RichLogs("Booting >> " & arg(1) & " ", Color.White, False, False)
-                                        str1 = str1.Remove(5, 5)
-                                    End If
+                                ElseIf cmd.Substring(0, 5).Contains("erase") Then
+                                    RichLogs("Erasing  >> Partition " & arg(1) & " ", Color.White, False, False)
 
-                                ElseIf str1.Substring(0, 5).Contains("erase") Then
-                                    RichLogs("Erasing  >> " & arg(1) & " ", Color.White, False, False)
+                                ElseIf cmd.Substring(0, 5).Contains("flash") Then
+                                    RichLogs("Flashing >> Partition " & arg(1) & " " & Path.GetFileName(cmd.Replace("flash ", "").Replace(arg(1), "").Replace("""", "")) & " ", Color.White, False, False)
 
-                                ElseIf str1.Substring(0, 5).Contains("flash") Then
-                                    RichLogs("Flashing >> " & arg(1) & " ", Color.White, False, False)
+                                ElseIf cmd.Substring(0, 3).Contains("oem") Then
+                                    RichLogs("OEM >> Command " & arg(1) & " ", Color.White, False, False)
 
-                                ElseIf str1.Substring(0, 3).Contains("oem") Then
-                                    RichLogs("OEM Command >> " & arg(1) & " ", Color.White, False, False)
+                                ElseIf cmd.Substring(0, 6).Contains("reboot") Then
+                                    RichLogs("Rebooting >> Into System ", Color.White, False, False)
 
-                                ElseIf str1.Substring(0, 6).Contains("reboot") Then
-                                    RichLogs("Rebooting into system  >> ", Color.White, False, False)
-
-                                ElseIf str1.Substring(0, 10).Contains("reboot-edl") Then
-                                    RichLogs("Rebooting into EDL Mode  >> ", Color.White, False, False)
+                                ElseIf cmd.Substring(0, 10).Contains("reboot-edl") Then
+                                    RichLogs("Rebooting >> Into Emergency Download Mode ", Color.White, False, False)
 
                                 End If
 
-                                exec = Fastboot(str1, sender, e)
+                                exec = Fastboot(cmd, sender, e)
                                 If exec.ToLower.Contains("okay") AndAlso exec.ToLower.Contains("finished") OrElse exec.ToLower.Contains("finished") Then
                                     RichLogs("[OK]", Color.Lime, False, True)
                                 Else
@@ -440,7 +452,7 @@ Public Class Main
                     End Using
 
                 Else
-                    RichLogs("Error! Missmatching image and device.", Color.Red, False, True)
+                    RichLogs("Error! Missmatching image [ " + DevicesName + " ] " + "and target device is [ " + product + " ].", Color.Red, False, True)
                 End If
 
 

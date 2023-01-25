@@ -201,7 +201,7 @@ namespace FastBootFlashingXiaomi
                 string str = string.Concat(new string[] { File.ReadAllText(openFileDialog.FileName) });
 
                 string product = str.Substring(str.LastIndexOf("^product: *") + 1);
-                product = product.Replace("product: *", "").Replace("\"", "").Replace(" || exit /B 1", "");
+                product = product.Replace("product: *", "").Replace("\"", "").Replace(" || exit /B 1", "").Replace(" || echo Missmatching image and device", "").Replace(" || @echo error : Missmatching image and device && exit /B 1", "");
 
                 var resultproduct = new TextBox();
 
@@ -242,11 +242,11 @@ namespace FastBootFlashingXiaomi
                             l = str1.Length;
                             p = str1.IndexOf("||") - 1;
                             str1 = str1.Remove(p, l - p);
-                            str1 = str1.Replace("fastboot %* ", "").Replace(@"%~dp0images\", "").Replace("pause", "").Replace("::", "").Replace("\"", "");
+                            str1 = str1.Replace("fastboot %* ", "").Replace(@"%~dp0images\", "").Replace(@"%~dp0\images\", "").Replace("pause", "").Replace("::", "").Replace("\"", "");
                         }
                         else
                         {
-                            str1 = str1.Replace("fastboot %* ", "").Replace(@"%~dp0images\", "").Replace("pause", "").Replace("::", "").Replace("\"", "");
+                            str1 = str1.Replace("fastboot %* ", "").Replace(@"%~dp0images\", "").Replace(@"%~dp0\images\", "").Replace("pause", "").Replace("::", "").Replace("\"", "");
                         }
 
                         if (!string.IsNullOrEmpty(str1))
@@ -278,11 +278,7 @@ namespace FastBootFlashingXiaomi
             }
 
         }
-        public void ReadFastbootDeviceInfo(BackgroundWorker worker, DoWorkEventArgs e)
-        {
 
-
-        }
         public void AllIsDone(object sender, RunWorkerCompletedEventArgs e)
         {
             RichLogs("_______________________________________________", Color.WhiteSmoke, true, true);
@@ -382,10 +378,43 @@ namespace FastBootFlashingXiaomi
                                 TodoCommand = string.Concat(TodoCommand, commands + " " + args + Constants.vbCrLf + "");
                             }
 
-                            else
-                            {
 
+                            // boot
+                            // erase
+                            // flash
+                            // oem
+                            // reboot
+                            // reboot-edl
+
+                            else if (commands == "boot")
+                            {
+                                TodoCommand = string.Concat(TodoCommand, commands + " " + filename + Constants.vbCrLf + "");
+                            }
+
+                            else if (commands == "erase")
+                            {
+                                TodoCommand = string.Concat(TodoCommand, commands + " " + args + Constants.vbCrLf + "");
+                            }
+
+                            else if (commands == "flash")
+                            {
                                 TodoCommand = string.Concat(TodoCommand, commands + " " + args + " " + filename + Constants.vbCrLf + "");
+                            }
+
+                            else if (commands == "oem")
+                            {
+                                TodoCommand = string.Concat(TodoCommand, commands + " " + args + Constants.vbCrLf + "");
+                            }
+
+                            else if (commands == "reboot")
+                            {
+                                TodoCommand = string.Concat(TodoCommand, commands + Constants.vbCrLf + "");
+                            }
+
+                            else if (commands == "reboot-edl")
+                            {
+                                TodoCommand = string.Concat(TodoCommand, commands + Constants.vbCrLf + "");
+
 
                             }
 
@@ -486,64 +515,51 @@ namespace FastBootFlashingXiaomi
                         {
                             while (stringReader.Peek() != -1)
                             {
-                                string str1 = stringReader.ReadLine();
-                                string command;
-                                string oem;
-                                string filename;
+                                string cmd = stringReader.ReadLine();
 
-                                if (!string.IsNullOrEmpty(str1))
+                                if (!string.IsNullOrEmpty(cmd))
                                 {
                                     string exec = null;
-                                    string[] arg = str1.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                                    string[] arg = cmd.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
-                                    Console.WriteLine(str1);
+                                    Console.WriteLine(cmd);
 
                                     ProgressBar1.Invoke(new Action(() => ProgressBar1.Visible = true));
                                     totaldo = (totaldo + 1d).ToString();
                                     Consoles.Delay(0.5d);
 
-                                    if (str1.Substring(0, 4).Contains("boot"))
+                                    if (cmd.Substring(0, 4).Contains("boot"))
                                     {
-                                        if (str1.Substring(0, 12).Contains("recover"))
-                                        {
-                                            RichLogs("Booting >> " + arg[1] + " ", Color.White, false, false);
-                                            str1 = str1.Replace(arg[1] + " ", "");
-                                        }
-
-                                        else if (str1.Substring(5, 4).Contains("boot"))
-                                        {
-                                            RichLogs("Booting >> " + arg[1] + " ", Color.White, false, false);
-                                            str1 = str1.Remove(5, 5);
-                                        }
+                                        RichLogs("Booting >> " + Path.GetFileName(cmd.Replace("boot ", "").Replace("\"", "")) + " ", Color.White, false, false);
                                     }
 
-                                    else if (str1.Substring(0, 5).Contains("erase"))
+                                    else if (cmd.Substring(0, 5).Contains("erase"))
                                     {
-                                        RichLogs("Erasing  >> " + arg[1] + " ", Color.White, false, false);
+                                        RichLogs("Erasing  >> Partition " + arg[1] + " ", Color.White, false, false);
                                     }
 
-                                    else if (str1.Substring(0, 5).Contains("flash"))
+                                    else if (cmd.Substring(0, 5).Contains("flash"))
                                     {
-                                        RichLogs("Flashing >> " + arg[1] + " ", Color.White, false, false);
+                                        RichLogs("Flashing >> Partition " + arg[1] + " " + Path.GetFileName(cmd.Replace("flash ", "").Replace(arg[1], "").Replace("\"", "")) + " ", Color.White, false, false);
                                     }
 
-                                    else if (str1.Substring(0, 3).Contains("oem"))
+                                    else if (cmd.Substring(0, 3).Contains("oem"))
                                     {
-                                        RichLogs("OEM Command >> " + arg[1] + " ", Color.White, false, false);
+                                        RichLogs("OEM >> Command " + arg[1] + " ", Color.White, false, false);
                                     }
 
-                                    else if (str1.Substring(0, 6).Contains("reboot"))
+                                    else if (cmd.Substring(0, 6).Contains("reboot"))
                                     {
-                                        RichLogs("Rebooting into system  >> ", Color.White, false, false);
+                                        RichLogs("Rebooting >> Into System ", Color.White, false, false);
                                     }
 
-                                    else if (str1.Substring(0, 10).Contains("reboot-edl"))
+                                    else if (cmd.Substring(0, 10).Contains("reboot-edl"))
                                     {
-                                        RichLogs("Rebooting into EDL Mode  >> ", Color.White, false, false);
+                                        RichLogs("Rebooting >> Into Emergency Download Mode ", Color.White, false, false);
 
                                     }
 
-                                    exec = Consoles.Fastboot(str1, (BackgroundWorker)sender, e);
+                                    exec = Consoles.Fastboot(cmd, (BackgroundWorker)sender, e);
                                     if (exec.ToLower().Contains("okay") && exec.ToLower().Contains("finished") || exec.ToLower().Contains("finished"))
                                     {
                                         RichLogs("[OK]", Color.Lime, false, true);
@@ -566,7 +582,7 @@ namespace FastBootFlashingXiaomi
 
                     else
                     {
-                        RichLogs("Error! Missmatching image and device.", Color.Red, false, true);
+                        RichLogs("Error! Missmatching image [ " + DevicesName + " ] " + "and target device is [ " + product + " ].", Color.Red, false, true);
                     }
                 }
 
