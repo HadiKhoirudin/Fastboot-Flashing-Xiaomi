@@ -1,0 +1,11 @@
+C:\Users\email\source\repos\FastBootFlashingXiaomi\C#\FastBootFlashingXiaomi\bin\Debug\FastBootFlashingXiaomi.exe.config
+C:\Users\email\source\repos\FastBootFlashingXiaomi\C#\FastBootFlashingXiaomi\bin\Debug\FastBootFlashingXiaomi.xml
+C:\Users\email\source\repos\FastBootFlashingXiaomi\C#\FastBootFlashingXiaomi\bin\Debug\FastBootFlashingXiaomi.exe
+C:\Users\email\source\repos\FastBootFlashingXiaomi\C#\FastBootFlashingXiaomi\bin\Debug\FastBootFlashingXiaomi.pdb
+C:\Users\email\source\repos\FastBootFlashingXiaomi\C#\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.csproj.AssemblyReference.cache
+C:\Users\email\source\repos\FastBootFlashingXiaomi\C#\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.Main.resources
+C:\Users\email\source\repos\FastBootFlashingXiaomi\C#\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.Resources.resources
+C:\Users\email\source\repos\FastBootFlashingXiaomi\C#\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.csproj.GenerateResource.cache
+C:\Users\email\source\repos\FastBootFlashingXiaomi\C#\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.csproj.CoreCompileInputs.cache
+C:\Users\email\source\repos\FastBootFlashingXiaomi\C#\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.exe
+C:\Users\email\source\repos\FastBootFlashingXiaomi\C#\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.pdb

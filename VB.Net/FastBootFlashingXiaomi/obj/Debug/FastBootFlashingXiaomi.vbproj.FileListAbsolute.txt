@@ -1,0 +1,12 @@
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\bin\Debug\FastBootFlashingXiaomi.exe.config
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\bin\Debug\FastBootFlashingXiaomi.exe
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\bin\Debug\FastBootFlashingXiaomi.pdb
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\bin\Debug\FastBootFlashingXiaomi.xml
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.vbproj.AssemblyReference.cache
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.Main.resources
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.Resources.resources
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.vbproj.GenerateResource.cache
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.vbproj.CoreCompileInputs.cache
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.exe
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.xml
+C:\Users\email\source\repos\FastBootFlashingXiaomi\VB.Net\FastBootFlashingXiaomi\obj\Debug\FastBootFlashingXiaomi.pdb

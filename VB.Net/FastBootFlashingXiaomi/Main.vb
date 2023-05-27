@@ -491,10 +491,6 @@ Public Class Main
         End If
     End Sub
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs)
-        RichLogs(Fastboot("getvar all", FastbootWorker, e), Color.Lime, False, True)
-    End Sub
-
 #End Region
 
 End Class

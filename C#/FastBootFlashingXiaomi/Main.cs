@@ -636,11 +636,6 @@ namespace FastBootFlashingXiaomi
             }
         }
 
-        private void Button1_Click(object sender, EventArgs e)
-        {
-            RichLogs(Consoles.Fastboot("getvar all", FastbootWorker, (DoWorkEventArgs)e), Color.Lime, false, true);
-        }
-
         #endregion
 
     }
